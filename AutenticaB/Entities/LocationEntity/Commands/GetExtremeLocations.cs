@@ -1,4 +1,5 @@
 ﻿using AutenticaB.Constants;
+using AutenticaB.Data;
 using AutoMapper;
 using MediatR;
 using System.IO.Compression;
@@ -9,9 +10,15 @@ namespace TMan.Entities.User.Commands
 {
     public class GetExtremeLocations : IRequestHandler<GetExtremeLocations.Command, ExtremeLocationsDto>
     {
+        private DataContext _dataContext;
         private readonly IMapper _mapper;
-        public GetExtremeLocations(IMapper mapper)
+
+        public GetExtremeLocations(
+            IMapper mapper,
+            DataContext DataContext
+            )
         {
+            _dataContext = DataContext;
             _mapper = mapper;
         }
 
@@ -19,6 +26,8 @@ namespace TMan.Entities.User.Commands
 
         public async Task<ExtremeLocationsDto> Handle(Command request, CancellationToken cancellationToken)
         {
+            // TODO: Create separated file service
+            // TODO: Save only specific file
             bool csvFileIsMissing = !File.Exists(Const.FilePath + "/AW_VIETU_CENTROIDI.CSV");
 
             if (csvFileIsMissing)
@@ -53,7 +62,6 @@ namespace TMan.Entities.User.Commands
                 var values = line.Split(';');
                 if (values.Length != 10) continue;
 
-
                 string latitudeString = values[8].Substring(1, values[8].Length - 2);
                 string longitudeString = values[9].Substring(1, values[9].Length - 2);
                 string name = values[2].Substring(1, values[2].Length - 2);
@@ -67,9 +75,15 @@ namespace TMan.Entities.User.Commands
                 };
                 locations.Add(location);
             }
+            reader.Close();
+
+            // Data may be saved in database
+            // _dataContext.Locations.AddRange(locations);
+            // await _dataContext.SaveChangesAsync();
+            // _dataContext.Locations.ToList();
 
             // TODO: Add check for empty "locations" list
-            // TODO: In case if we use this very ofen, will have to do serious research.
+            // TODO: In case if we use this very often, will have to do serious research.
             // Maybe it will be better to sort data by long/lat (https://en.wikipedia.org/wiki/Quicksort) and save two separated data strtuctures,
             // so that max/min elements are first/last and no need to find them. 
             // Also binary search will be able in case we would like to find location with specific lat/log.
@@ -77,8 +91,6 @@ namespace TMan.Entities.User.Commands
             LocationDto southLocation = _mapper.Map<LocationDto>(locations.MinBy(l => l.Latitude));
             LocationDto eastLocation = _mapper.Map<LocationDto>(locations.MaxBy(l => l.Longitude));
             LocationDto westLocation = _mapper.Map<LocationDto>(locations.MinBy(l => l.Longitude));
-
-
 
             return new ExtremeLocationsDto()
             {

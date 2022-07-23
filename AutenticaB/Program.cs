@@ -1,3 +1,4 @@
+using AutenticaB.Constants;
 using MediatR;
 
 namespace AutenticaB
@@ -12,22 +13,9 @@ namespace AutenticaB
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            var  MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy(name: MyAllowSpecificOrigins,
-                    builder =>
-                    {
-                        builder
-                        .WithOrigins("http://localhost:4200")
-                        .AllowAnyHeader()
-                        .AllowAnyMethod()
-                    ;
-                    });
-            });
-
             builder.Services.AddMediatR(typeof(Program));
             builder.Services.AddAutoMapper(typeof(Program));
+            builder.Services.SetUpInfrastructure(builder.Configuration);
 
             var app = builder.Build();
 
@@ -40,10 +28,9 @@ namespace AutenticaB
 
             app.UseHttpsRedirection();
 
-            app.UseCors(MyAllowSpecificOrigins);
+            app.UseCors(Const.AngularOrigin);
 
             app.UseAuthorization();
-
 
             app.MapControllers();
 
