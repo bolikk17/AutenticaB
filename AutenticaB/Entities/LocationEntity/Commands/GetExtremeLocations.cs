@@ -3,8 +3,6 @@ using AutenticaB.Data;
 using AutenticaB.Services;
 using AutoMapper;
 using MediatR;
-using System.IO.Compression;
-using System.Net;
 using TMan.Entities.LocationEntity;
 
 namespace TMan.Entities.User.Commands
@@ -30,22 +28,25 @@ namespace TMan.Entities.User.Commands
 
         public async Task<ExtremeLocationsDto> Handle(Command request, CancellationToken cancellationToken)
         {
-            bool csvFileIsMissing = !_fileManager.FileExists(Const.FilePath + "/AW_VIETU_CENTROIDI.CSV");
+            string pathToCsv = Const.FilePath + "/" + Const.CsvFileName;
+            string pathToZip = Const.FilePath + "/" + Const.ArchiveFileName;
+
+            bool csvFileIsMissing = !_fileManager.FileExists(pathToCsv);
 
             if (csvFileIsMissing)
             {
-                bool zipFileIsMissing = !_fileManager.FileExists(Const.FilePath + "/data.zip");
+                bool zipFileIsMissing = !_fileManager.FileExists(pathToZip);
 
                 if (zipFileIsMissing)
                 {
-                    _fileManager.DownloadFileByUrl(Const.DownloadFileUrl, Const.FilePath + "/data.zip");
+                    _fileManager.DownloadFileByUrl(Const.DownloadFileUrl, pathToZip);
                 }
 
-                _fileManager.ExtractFile(Const.FilePath + "/data.zip", Const.FilePath + "/AW_VIETU_CENTROIDI.CSV");
+                _fileManager.ExtractFile(pathToZip, pathToCsv);
 
             }
 
-            List<Location> locations = _fileManager.ReadCsvFile(Const.FilePath + "/AW_VIETU_CENTROIDI.CSV");
+            List<Location> locations = _fileManager.ReadCsvFile(pathToCsv);
 
             // Data may be saved in database
             // _dataContext.Locations.AddRange(locations);
