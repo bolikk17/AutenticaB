@@ -44,7 +44,13 @@ namespace TMan.Entities.User.Commands
 
                 using (ZipArchive archive = ZipFile.Open(Const.FilePath + "/data.zip", ZipArchiveMode.Read))
                 {
-                    archive.ExtractToDirectory(Const.FilePath);
+                    ZipArchiveEntry? entry = archive.Entries.Where(e => e.FullName.Contains("CENTROIDI")).FirstOrDefault();
+
+                    if (entry != null)
+                    {
+                        entry.ExtractToFile(Const.FilePath + "/AW_VIETU_CENTROIDI.CSV");
+                    }
+
                 }
             }
 
